@@ -3,6 +3,7 @@ package com.andforce;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 class CodePoint10_0_0 implements IGrapheme{
     private static final int CR = 0;
@@ -36,53 +37,23 @@ class CodePoint10_0_0 implements IGrapheme{
                 0xdc00 <= str.charAt(pos + 1) && str.charAt(pos + 1) <= 0xdfff;
     }
 
-    // Private function, gets a Unicode code point from a JavaScript UTF-16 string
-    // handling surrogate pairs appropriately
-    private int codePointAt(String str, int idx) {
-        if (idx < 0) {
-            idx = 0;
-        }
-        int code = str.charAt(idx);
-
-        // if a high surrogate
-        if (0xD800 <= code && code <= 0xDBFF &&
-                idx < str.length() - 1) {
-            int hi = code;
-            int low = str.charAt(idx + 1);
-            if (0xDC00 <= low && low <= 0xDFFF) {
-                return ((hi - 0xD800) * 0x400) + (low - 0xDC00) + 0x10000;
-            }
-            return hi;
-        }
-
-        // if a low surrogate
-        if (0xDC00 <= code && code <= 0xDFFF &&
-                idx >= 1) {
-            int hi = str.charAt(idx - 1);
-            int low = code;
-            if (0xD800 <= hi && hi <= 0xDBFF) {
-                return ((hi - 0xD800) * 0x400) + (low - 0xDC00) + 0x10000;
-            }
-            return low;
-        }
-
-        //just return the char if an unmatched surrogate half or a
-        //single-char codepoint
-        return code;
-    }
-
-    private boolean isShouldBreak(int start, Integer[] mid, int end) {
+    private boolean isShouldBreak(int start, int[] mid, int end) {
         int ret = shouldBreak(start, mid, end);
         return ret != NotBreak;
     }
 
     // Private function, returns whether a break is allowed between the
     // two given grapheme breaking classes
-    private int shouldBreak(int start, Integer[] mid, int end) {
+    private int shouldBreak(int start, int[] mid, int end) {
         //int[] all1 = {start,mid,end};
         List<Integer> all = new ArrayList<>();
         all.add(start);
-        all.addAll(Arrays.asList(mid));
+        Integer[] midInt = new Integer[mid.length];
+        for (int i = 0; i < midInt.length; i++) {
+            midInt[i] = mid[i];
+            all.add(midInt[i]);
+        }
+
         all.add(end);
 
         int previous = all.get(all.size() - 2);
@@ -216,10 +187,11 @@ class CodePoint10_0_0 implements IGrapheme{
 
         // GB12. ^ (RI RI)* RI ? RI
         // GB13. [^RI] (RI RI)* RI ? RI
-        List<Integer> midlist = new ArrayList<>(mid.length);
-        midlist.addAll(Arrays.asList(mid));
-        if (midlist.contains(Regional_Indicator)) {
-            return Break;
+
+        for (Integer integer : midInt) {
+            if (integer == Regional_Indicator) {
+                return Break;
+            }
         }
         if (previous == Regional_Indicator && next == Regional_Indicator) {
             return NotBreak;
@@ -237,22 +209,23 @@ class CodePoint10_0_0 implements IGrapheme{
         if (index >= string.length() - 1) {
             return string.length();
         }
-        int prev = getGraphemeBreakProperty(codePointAt(string, index));
-        List<Integer> mid = new ArrayList<>();
-        //var mid = []
+        int prev = getGraphemeBreakProperty(Character.codePointAt(string, index));
+        int[] mid = new int[0];
         for (int i = index + 1; i < string.length(); i++) {
             // check for already processed low surrogates
             if (isSurrogate(string, i - 1)) {
                 continue;
             }
 
-            int next = getGraphemeBreakProperty(codePointAt(string, i));
-            Integer[] intArr = mid.toArray(new Integer[mid.size()]);
-            if (isShouldBreak(prev, intArr, next)) {
+            int next = getGraphemeBreakProperty(Character.codePointAt(string, i));
+            if (isShouldBreak(prev, mid, next)) {
                 return i;
             }
 
-            mid.add(next);
+            int[] newmid = new int[mid.length + 1];
+            System.arraycopy(mid, 0, newmid, 0, mid.length);
+            newmid[newmid.length - 1] = next;
+            mid = newmid;
         }
         return string.length();
     }
@@ -265,12 +238,10 @@ class CodePoint10_0_0 implements IGrapheme{
         int brk;
         while ((brk = this.nextBreak(str, index)) < str.length()) {
             res.add(str.substring(index, brk));
-            //res.push(str.slice(index, brk));
             index = brk;
         }
         if (index < str.length()) {
             res.add(str.substring(index));
-            //res.push(str.slice(index));
         }
         return res;
     }
