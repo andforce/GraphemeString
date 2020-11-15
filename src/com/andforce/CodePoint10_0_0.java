@@ -1,73 +1,35 @@
+package com.andforce;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public final class GraphemeString {
-    private final List<String> mSplits;
-    private final String mSource;
-
-    public GraphemeString(String src) {
-        super();
-        mSource = src;
-        mSplits = splitGraphemes(mSource);
-    }
-
-
-    public boolean isEmpty() {
-        return mSource.isEmpty();
-    }
-
-    public String graphemeAt(int index) {
-        return mSplits.get(index);
-    }
-
-    public String subGraphemes(int beginGraphemeIndex, int endGraphemeIndex) {
-        if (mSplits == null) {
-            return null;
-        }
-        List<String> sub = mSplits.subList(beginGraphemeIndex, endGraphemeIndex);
-        StringBuilder sb = new StringBuilder();
-        for (String s : sub) {
-            sb.append(s);
-        }
-        return sb.toString();
-    }
-
-    // Returns the number of grapheme clusters there are in the given string
-    public int graphemesCount() {
-        return mSplits.size();
-    }
-
-    @Override
-    public String toString() {
-        return mSource;
-    }
-
-    private final int CR = 0;
-    private final int LF = 1;
-    private final int Control = 2;
-    private final int Extend = 3;
-    private final int Regional_Indicator = 4;
-    private final int SpacingMark = 5;
-    private final int L = 6;
-    private final int V = 7;
-    private final int T = 8;
-    private final int LV = 9;
-    private final int LVT = 10;
-    private final int Other = 11;
-    private final int Prepend = 12;
-    private final int E_Base = 13;
-    private final int E_Modifier = 14;
-    private final int ZWJ = 15;
-    private final int Glue_After_Zwj = 16;
-    private final int E_Base_GAZ = 17;
+class CodePoint10_0_0 implements IGrapheme{
+    private static final int CR = 0;
+    private static final int LF = 1;
+    private static final int Control = 2;
+    private static final int Extend = 3;
+    private static final int Regional_Indicator = 4;
+    private static final int SpacingMark = 5;
+    private static final int L = 6;
+    private static final int V = 7;
+    private static final int T = 8;
+    private static final int LV = 9;
+    private static final int LVT = 10;
+    private static final int Other = 11;
+    private static final int Prepend = 12;
+    private static final int E_Base = 13;
+    private static final int E_Modifier = 14;
+    private static final int ZWJ = 15;
+    private static final int Glue_After_Zwj = 16;
+    private static final int E_Base_GAZ = 17;
 
     // BreakTypes
-    private final int NotBreak = 0;
-    private final int BreakStart = 1;
-    private final int Break = 2;
-    private final int BreakLastRegional = 3;
-    private final int BreakPenultimateRegional = 4;
+    private static final int NotBreak = 0;
+    private static final int BreakStart = 1;
+    private static final int Break = 2;
+    private static final int BreakLastRegional = 3;
+    private static final int BreakPenultimateRegional = 4;
 
     private boolean isSurrogate(String str, int pos) {
         return 0xd800 <= str.charAt(pos) && str.charAt(pos) <= 0xdbff &&
@@ -296,7 +258,8 @@ public final class GraphemeString {
     }
 
     // Breaks the given string into an array of grapheme cluster strings
-    private List<String> splitGraphemes(String str) {
+    @Override
+    public List<String> splitGraphemes(String str) {
         List<String> res = new ArrayList<>();
         int index = 0;
         int brk;
