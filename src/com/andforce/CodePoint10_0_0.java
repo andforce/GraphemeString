@@ -206,28 +206,50 @@ class CodePoint10_0_0 implements IGrapheme{
         if (index < 0) {
             return 0;
         }
-        if (index >= string.length() - 1) {
-            return string.length();
+        int strLen = string.length();
+        if (index >= strLen - 1) {
+            return strLen;
         }
-        int prev = getGraphemeBreakProperty(Character.codePointAt(string, index));
-        int[] mid = new int[0];
-        for (int i = index + 1; i < string.length(); i++) {
-            // check for already processed low surrogates
-            if (isSurrogate(string, i - 1)) {
-                continue;
+        int codePoint = Character.codePointAt(string, index);
+        int prevBreakProperty = getGraphemeBreakProperty(codePoint);
+        int[] midBreakProperties = new int[0];
+
+        for (int i = index + string.offsetByCodePoints(index, 1); i < strLen; i = string.offsetByCodePoints(i, 1)) {
+            int nextPoint = Character.codePointAt(string, i);
+
+            int nextBreakProperty = getGraphemeBreakProperty(nextPoint);
+
+            if (isShouldBreak(prevBreakProperty, midBreakProperties, nextBreakProperty)) {
+                if (prevBreakProperty == Regional_Indicator && nextBreakProperty == Regional_Indicator) {
+
+                } else {
+                    return i;
+                }
             }
 
-            int next = getGraphemeBreakProperty(Character.codePointAt(string, i));
-            if (isShouldBreak(prev, mid, next)) {
-                return i;
-            }
-
-            int[] newmid = new int[mid.length + 1];
-            System.arraycopy(mid, 0, newmid, 0, mid.length);
-            newmid[newmid.length - 1] = next;
-            mid = newmid;
+            int[] newmid = new int[midBreakProperties.length + 1];
+            System.arraycopy(midBreakProperties, 0, newmid, 0, midBreakProperties.length);
+            newmid[newmid.length - 1] = nextBreakProperty;
+            midBreakProperties = newmid;
         }
-        return string.length();
+
+//        for (int i = index + 1; i < strLen; i++) {
+//            // check for already processed low surrogates
+//            if (isSurrogate(string, i - 1)) {
+//                continue;
+//            }
+//
+//            int nextBreakProperty = getGraphemeBreakProperty(Character.codePointAt(string, i));
+//            if (isShouldBreak(prevBreakProperty, midBreakProperties, nextBreakProperty)) {
+//                return i;
+//            }
+//
+//            int[] newmid = new int[midBreakProperties.length + 1];
+//            System.arraycopy(midBreakProperties, 0, newmid, 0, midBreakProperties.length);
+//            newmid[newmid.length - 1] = nextBreakProperty;
+//            midBreakProperties = newmid;
+//        }
+        return strLen;
     }
 
     // Breaks the given string into an array of grapheme cluster strings
